@@ -19,7 +19,7 @@ spring:
 #  level:
 #    root: debug
 server:
-  port: 8080
+  port: 8081
 
 workId: 1
 dataId: 1

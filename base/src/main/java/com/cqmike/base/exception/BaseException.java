@@ -1,5 +1,7 @@
 package com.cqmike.base.exception;
 
+import com.google.common.base.Strings;
+
 /**
  * @program: iot
  * @ClassName: BaseException
@@ -17,6 +19,10 @@ public abstract class BaseException extends RuntimeException {
 
     public BaseException(String message) {
         super(message);
+    }
+
+    public BaseException(String template, Object... messages) {
+        super(Strings.lenientFormat(template, messages));
     }
 
     public BaseException(String message, Throwable cause) {

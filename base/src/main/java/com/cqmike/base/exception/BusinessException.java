@@ -1,5 +1,6 @@
 package com.cqmike.base.exception;
 
+import com.google.common.base.Strings;
 import org.springframework.http.HttpStatus;
 
 /**
@@ -43,6 +44,10 @@ public class BusinessException extends BaseException {
 
     public BusinessException() {
         super();
+    }
+
+    public BusinessException(String template, Object... messages) {
+        super(Strings.lenientFormat(template, messages));
     }
 
     public BusinessException(BaseErrorInfoInterface errorInfoInterface) {

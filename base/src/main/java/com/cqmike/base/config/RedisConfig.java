@@ -25,7 +25,7 @@ import org.springframework.data.redis.serializer.StringRedisSerializer;
  * @create: 2020-11-08 12:01
  **/
 @Configuration
-@ConditionalOnClass(RedisOperations.class)
+@ConditionalOnClass({RedisOperations.class})
 @EnableConfigurationProperties(RedisProperties.class)
 public class RedisConfig {
     private static final Logger log = LoggerFactory.getLogger(RedisConfig.class);
