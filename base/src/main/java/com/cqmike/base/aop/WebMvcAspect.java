@@ -1,8 +1,14 @@
 package com.cqmike.base.aop;
 
+import cn.hutool.core.util.ArrayUtil;
 import com.cqmike.base.util.JsonUtils;
+import com.google.common.collect.Maps;
 import org.aspectj.lang.ProceedingJoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.Signature;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
+import org.aspectj.lang.reflect.MethodSignature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -12,6 +18,8 @@ import org.springframework.web.context.request.ServletRequestAttributes;
 import javax.servlet.http.HttpServletRequest;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * @program: iot
@@ -54,14 +62,41 @@ public class WebMvcAspect {
         l.setThreadName(Thread.currentThread().getName());
         l.setIp(getIp(request));
         l.setUrl(request.getRequestURL().toString());
-        l.setClassMethod(String.format("%s.%s", joinPoint.getSignature().getDeclaringTypeName(), joinPoint.getSignature().getName()));
+        l.setClassMethod(String.format("%s.%s", joinPoint.getSignature().getDeclaringTypeName(),
+                joinPoint.getSignature().getName()));
         l.setHttpMethod(request.getMethod());
-        l.setRequestParams(JsonUtils.toJson(joinPoint.getArgs()));
-        l.setResult(JsonUtils.toJson(result));
+        l.setRequestParams(getNameAndValue(joinPoint));
+        l.setResult(result);
         l.setTimeCost(System.currentTimeMillis() - startTime);
         log.debug("Request Log Info     : {}", JsonUtils.toJson(l));
         // 每个请求之间空一行
         return result;
+    }
+
+    /**
+     *  获取方法参数名和参数值
+     * @param joinPoint
+     * @return
+     */
+    private Map<String, Object> getNameAndValue(ProceedingJoinPoint joinPoint) {
+
+        final Signature signature = joinPoint.getSignature();
+        MethodSignature methodSignature = (MethodSignature) signature;
+        final String[] names = methodSignature.getParameterNames();
+        final Object[] args = joinPoint.getArgs();
+
+        if (ArrayUtil.isEmpty(names) || ArrayUtil.isEmpty(args)) {
+            return Collections.emptyMap();
+        }
+        if (names.length != args.length) {
+            log.warn("{}方法参数名和参数值数量不一致", methodSignature.getName());
+            return Collections.emptyMap();
+        }
+        Map<String, Object> map = Maps.newHashMap();
+        for (int i = 0; i < names.length; i++) {
+            map.put(names[i], args[i]);
+        }
+        return map;
     }
 
     private static final String UNKNOWN = "unknown";

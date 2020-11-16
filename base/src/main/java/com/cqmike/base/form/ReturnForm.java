@@ -70,6 +70,14 @@ public class ReturnForm<T> implements Serializable {
         return new ReturnForm<>(t);
     }
 
+    public static <T> ReturnForm<T> ok() {
+        return new ReturnForm<>(true);
+    }
+
+    public static <T> ReturnForm<T> ok(T t) {
+        return new ReturnForm<>(t);
+    }
+
     public static <T> ReturnForm<T> message(int status, T t) {
         return new ReturnForm<>(status, t);
     }
