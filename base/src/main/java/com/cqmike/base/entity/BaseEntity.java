@@ -1,5 +1,6 @@
 package com.cqmike.base.entity;
 
+import com.cqmike.base.convert.LocalDateTimeAttributeConverter;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.GenericGenerator;
@@ -34,6 +35,7 @@ public abstract class BaseEntity extends AbstractAggregateRoot implements Serial
             name = "create_at",
             columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
     )
+    @Convert(converter = LocalDateTimeAttributeConverter.class)
     @CreationTimestamp
     protected LocalDateTime createAt;
 
@@ -51,8 +53,10 @@ public abstract class BaseEntity extends AbstractAggregateRoot implements Serial
             name = "update_at",
             columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '最后修改时间'"
     )
+    @Convert(converter = LocalDateTimeAttributeConverter.class)
     @UpdateTimestamp
     protected LocalDateTime updateAt;
+
     @Column(
             name = "update_by",
             columnDefinition = "varchar(32) DEFAULT '' COMMENT '最后修改用户'",
