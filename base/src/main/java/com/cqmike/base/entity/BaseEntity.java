@@ -33,7 +33,7 @@ public abstract class BaseEntity extends AbstractAggregateRoot implements Serial
     )
     @Column(
             name = "create_at",
-            columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间'"
     )
     @Convert(converter = LocalDateTimeAttributeConverter.class)
     @CreationTimestamp
@@ -51,7 +51,7 @@ public abstract class BaseEntity extends AbstractAggregateRoot implements Serial
     )
     @Column(
             name = "update_at",
-            columnDefinition = "timestamp DEFAULT CURRENT_TIMESTAMP COMMENT '最后修改时间'"
+            columnDefinition = "datetime DEFAULT CURRENT_TIMESTAMP COMMENT '最后修改时间'"
     )
     @Convert(converter = LocalDateTimeAttributeConverter.class)
     @UpdateTimestamp
