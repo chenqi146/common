@@ -35,6 +35,7 @@ public class JsonUtils {
         // 设置Date类型的序列化及反序列化格式
         om.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss"));
 
+        om.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
         // 忽略空Bean转json的错误
         om.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         // 忽略未知属性，防止json字符串中存在，java对象中不存在对应属性的情况出现错误
@@ -66,9 +67,9 @@ public class JsonUtils {
     /**
      * json字符串 => 对象
      *
-     * @param json 源json串
+     * @param json  源json串
      * @param clazz 对象类
-     * @param <T> 泛型
+     * @param <T>   泛型
      */
     public static <T> T parse(String json, Class<T> clazz) {
 
@@ -80,7 +81,7 @@ public class JsonUtils {
      *
      * @param json 源json串
      * @param type 对象类型
-     * @param <T> 泛型
+     * @param <T>  泛型
      */
     public static <T> T parse(String json, TypeReference<T> type) {
 
@@ -95,10 +96,10 @@ public class JsonUtils {
      * <br>
      * 此方法不对外暴露，访问权限为private
      *
-     * @param json 源json串
+     * @param json  源json串
      * @param clazz 对象类
-     * @param type 对象类型
-     * @param <T> 泛型
+     * @param type  对象类型
+     * @param <T>   泛型
      */
     private static <T> T parse(String json, Class<T> clazz, TypeReference<T> type) {
 
