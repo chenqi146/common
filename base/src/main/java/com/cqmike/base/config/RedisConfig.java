@@ -1,14 +1,17 @@
 package com.cqmike.base.config;
 
+import com.cqmike.base.util.RedisClient;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -40,7 +43,7 @@ public class RedisConfig {
      * @param redisConnectionFactory
      * @return
      */
-    @Bean
+    @Bean("redisTemplate")
     public RedisTemplate<String, Object> redisTemplate(RedisConnectionFactory redisConnectionFactory) {
         log.info("redis初始化序列方式！");
         // 配置 json 序列化器 - Jackson2JsonRedisSerializer
@@ -48,11 +51,13 @@ public class RedisConfig {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.setVisibility(PropertyAccessor.ALL, JsonAutoDetect.Visibility.ANY);
         objectMapper.activateDefaultTyping(LaissezFaireSubTypeValidator.instance,
-                ObjectMapper.DefaultTyping.NON_FINAL,
-                JsonTypeInfo.As.WRAPPER_ARRAY);
+                ObjectMapper.DefaultTyping.NON_FINAL);
         // 解决jackson2无法反序列化LocalDateTime的问题
         objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
-        objectMapper.disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS);
+        // 忽略空Bean转json的错误
+        objectMapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
+        // 忽略未知属性，防止json字符串中存在，java对象中不存在对应属性的情况出现错误
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
         objectMapper.registerModule(new JavaTimeModule());
         jacksonSerializer.setObjectMapper(objectMapper);
         // 創建並配置自定義 RedisTemplateRedisOperator
@@ -69,5 +74,10 @@ public class RedisConfig {
         template.afterPropertiesSet();
         return template;
     }
+    @Bean
+    public RedisClient redisClient(@Qualifier("redisTemplate") RedisTemplate redisTemplate) {
+        return new RedisClient(redisTemplate);
+    }
+
 }
 

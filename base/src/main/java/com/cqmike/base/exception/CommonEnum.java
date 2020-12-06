@@ -10,6 +10,8 @@ package com.cqmike.base.exception;
  **/
 
 public enum CommonEnum implements BaseErrorInfoInterface {
+    SERIALIZER_ERROR(10, "序列化错误!"),
+    REDIS_ERROR(11, "redis错误!"),
     SUCCESS(200, "成功!"),
     BODY_NOT_MATCH(400, "请求的数据格式不符!"),
     SIGNATURE_NOT_MATCH(401, "请求的数字签名不匹配!"),

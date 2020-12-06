@@ -15,15 +15,6 @@ public class BusinessException extends BaseException {
 
     private static final long serialVersionUID = 1L;
 
-    /**
-     * 错误码
-     */
-    protected Integer errorCode;
-    /**
-     * 错误信息
-     */
-    protected String errorMsg;
-
     @Override
     public Integer getErrorCode() {
         return errorCode;

@@ -12,6 +12,15 @@ import com.google.common.base.Strings;
  **/
 public abstract class BaseException extends RuntimeException {
 
+    /**
+     * 错误码
+     */
+    protected Integer errorCode;
+    /**
+     * 错误信息
+     */
+    protected String errorMsg;
+
 
     public BaseException() {
         super();
@@ -38,6 +47,31 @@ public abstract class BaseException extends RuntimeException {
         return super.getMessage() + ";";
     }
 
-    public abstract Integer getErrorCode();
-    public abstract String getErrorMsg();
+    public Integer getErrorCode() {
+        return errorCode;
+    }
+
+    public String getErrorMsg() {
+        return errorMsg;
+    }
+
+    public BaseException(BaseErrorInfoInterface errorInfoInterface) {
+        super(errorInfoInterface.getResultMsg());
+        this.errorCode = errorInfoInterface.getResultCode();
+        this.errorMsg = errorInfoInterface.getResultMsg();
+    }
+
+    public BaseException(BaseErrorInfoInterface errorInfoInterface, Throwable cause) {
+        super(errorInfoInterface.getResultMsg(), cause);
+        this.errorCode = errorInfoInterface.getResultCode();
+        this.errorMsg = errorInfoInterface.getResultMsg();
+    }
+
+    public void setErrorCode(Integer errorCode) {
+        this.errorCode = errorCode;
+    }
+
+    public void setErrorMsg(String errorMsg) {
+        this.errorMsg = errorMsg;
+    }
 }

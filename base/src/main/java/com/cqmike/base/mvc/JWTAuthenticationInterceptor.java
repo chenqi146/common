@@ -4,6 +4,7 @@ import cn.hutool.core.util.StrUtil;
 import com.cqmike.base.auth.Auth;
 import com.cqmike.base.exception.BusinessException;
 import com.cqmike.base.exception.CommonEnum;
+import com.cqmike.base.util.RedisClient;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
@@ -20,10 +21,10 @@ import java.util.concurrent.TimeUnit;
  **/
 public abstract class JWTAuthenticationInterceptor implements HandlerInterceptor {
 
-    protected StringRedisTemplate redisTemplate;
+    protected RedisClient redisClient;
 
-    public JWTAuthenticationInterceptor(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    public JWTAuthenticationInterceptor(RedisClient redisClient) {
+        this.redisClient = redisClient;
     }
 
     private final static String TOKEN_HEADER = "Authorization";
@@ -42,14 +43,14 @@ public abstract class JWTAuthenticationInterceptor implements HandlerInterceptor
         }
 
         String key = TOKEN_HEADER + StrUtil.COLON + token;
-        Boolean hasKey = redisTemplate.hasKey(key);
-        if (hasKey == null || !hasKey) {
+        boolean hasKey = redisClient.hasKey(key);
+        if (!hasKey) {
             throw new BusinessException(CommonEnum.SIGNATURE_NOT_MATCH);
         }
 
-        String json = redisTemplate.opsForValue().get(key);
+        String json = redisClient.get(key, String.class);
         afterValid(json);
-        redisTemplate.expire(key, 30, TimeUnit.MINUTES);
+        redisClient.expire(key, 30 * 60);
         return true;
     }
 

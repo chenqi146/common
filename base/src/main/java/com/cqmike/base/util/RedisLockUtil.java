@@ -39,21 +39,16 @@ public final class RedisLockUtil {
     /**
      * 获取分布式锁
      *
-     * @param redisTemplate
      * @param lockKey    锁的key
      * @param value      当前锁的值
      * @param expireTime 过期时间
      * @return
      */
-    public static boolean tryGetDistributedLock(StringRedisTemplate redisTemplate, String lockKey, String value, int expireTime) {
+    public static boolean tryGetDistributedLock(RedisClient redisClient, String lockKey, String value, int expireTime) {
 
         List<String> values = Lists.newArrayList(value, String.valueOf(expireTime));
 
-        // 指定 lua 脚本，并且指定返回值类型
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(LOCK_LUA, Long.class);
-
-        // 参数一：redisScript，参数二：key列表，参数三：arg（可多个）
-        Long result = redisTemplate.execute(redisScript, Collections.singletonList(lockKey), values);
+        Object result = redisClient.eval(LOCK_LUA, Collections.singletonList(lockKey), values);
         //判断是否成功
         return Objects.equals(SUCCESS, result);
     }
@@ -66,31 +61,23 @@ public final class RedisLockUtil {
      * @param value   当前锁的值
      * @return
      */
-    public static boolean releaseDistributedLock(StringRedisTemplate redisTemplate, String lockKey, String value) {
-
-        // 指定 lua 脚本，并且指定返回值类型
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(LOCK_RELEASE_LUA, Long.class);
-
+    public static boolean releaseDistributedLock(RedisClient redisClient, String lockKey, String value) {
         // 参数一：redisScript，参数二：key列表，参数三：arg（可多个）
-        Long result = redisTemplate.execute(redisScript, Collections.singletonList(lockKey), Collections.singletonList(value));
+        Object result = redisClient.eval(LOCK_RELEASE_LUA, Collections.singletonList(lockKey), Collections.singletonList(value));
         return Objects.equals(SUCCESS, result);
     }
 
     /**
      * 延长锁的超时时间
      *
-     * @param redisTemplate
      * @param lockKey  锁的key
      * @param value    当前锁的值
      * @param lockTime 锁的过期延长时间
      * @return
      */
-    public static boolean expandLockTime(StringRedisTemplate redisTemplate, String lockKey, String value, int lockTime) {
-        // 指定 lua 脚本，并且指定返回值类型
-        DefaultRedisScript<Long> redisScript = new DefaultRedisScript<>(LOCK_EXPAND_LUA, Long.class);
-
+    public static boolean expandLockTime(RedisClient redisClient, String lockKey, String value, int lockTime) {
         // 参数一：redisScript，参数二：key列表，参数三：arg（可多个）
-        Long result = redisTemplate.execute(redisScript, Collections.singletonList(lockKey), Lists.newArrayList(value, String.valueOf(lockTime)));
+        Object result = redisClient.eval(LOCK_EXPAND_LUA, Collections.singletonList(lockKey), Lists.newArrayList(value, String.valueOf(lockTime)));
         return Objects.equals(SUCCESS, result);
     }
 
@@ -107,9 +94,9 @@ public final class RedisLockUtil {
      * @return true -> 获取到锁
      * @throws InterruptedException
      */
-    public static boolean lockWithWaitTime(StringRedisTemplate client, String lockKey, String value, int expireTime, long waitMilliSecondTime) throws InterruptedException {
+    public static boolean lockWithWaitTime(RedisClient redisClient, String lockKey, String value, int expireTime, long waitMilliSecondTime) throws InterruptedException {
         while (waitMilliSecondTime >= 0) {
-            final boolean lock = tryGetDistributedLock(client, lockKey, value, expireTime);
+            final boolean lock = tryGetDistributedLock(redisClient, lockKey, value, expireTime);
             if (lock) {
                 return true;
             }

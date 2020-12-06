@@ -4,6 +4,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.StrUtil;
 import com.cqmike.base.annotation.RedisLock;
 import com.cqmike.base.generator.SnowflakeIdWorker;
+import com.cqmike.base.util.RedisClient;
 import com.cqmike.base.util.RedisLockUtil;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -38,11 +39,11 @@ public class RedisLockAspect {
     @Resource
     private SnowflakeIdWorker snowflakeIdWorker;
 
-    private StringRedisTemplate redisTemplate;
+    private RedisClient redisClient;
 
-    @Autowired
-    public void setRedisTemplate(StringRedisTemplate redisTemplate) {
-        this.redisTemplate = redisTemplate;
+    @Autowired(required = false)
+    public void setRedisTemplate(RedisClient redisClient) {
+        this.redisClient = redisClient;
     }
 
     @Around("@annotation(com.cqmike.base.annotation.RedisLock)")
@@ -68,12 +69,12 @@ public class RedisLockAspect {
                 joinPoint.getTarget().getClass().getSimpleName(), methodSignature.getMethod().getName());
         // 尝试获取分布式锁  根据等待时间去重试获取锁
         try {
-            if (!RedisLockUtil.lockWithWaitTime(redisTemplate, lockKey, value, expire, annotation.waitTime())) {
+            if (!RedisLockUtil.lockWithWaitTime(redisClient, lockKey, value, expire, annotation.waitTime())) {
                 return null;
             }
         } catch (Exception e) {
             log.error("{}, 尝试获取分布式锁异常", format, e);
-            if (!RedisLockUtil.releaseDistributedLock(redisTemplate, lockKey, value)) {
+            if (!RedisLockUtil.releaseDistributedLock(redisClient, lockKey, value)) {
                 log.error("{}, 尝试获取分布式锁异常时分布式锁释放失败, key: {}, value: {}", format, lockKey, value);
             } else {
                 log.info("{}, 尝试获取分布式锁异常时分布式锁释放成功, key: {}, value: {}", format, lockKey, value);
@@ -84,7 +85,7 @@ public class RedisLockAspect {
         try {
 
             log.info("{} ,获取到分布式锁: key: {}, value: {}", format, lockKey, value);
-            LockExpandDaemonRunnable runnable = new LockExpandDaemonRunnable(redisTemplate, lockKey, value, expire);
+            LockExpandDaemonRunnable runnable = new LockExpandDaemonRunnable(redisClient, lockKey, value, expire);
             // 开启redis 过期时间 续期守护线程
             Thread thread = new Thread(runnable);
             thread.setDaemon(Boolean.TRUE);
@@ -101,7 +102,7 @@ public class RedisLockAspect {
 
             return proceed;
         } finally {
-            if (!RedisLockUtil.releaseDistributedLock(redisTemplate, lockKey, value)) {
+            if (!RedisLockUtil.releaseDistributedLock(redisClient, lockKey, value)) {
                 log.error("{}, 分布式锁释放失败, key: {}, value: {}", format, lockKey, value);
             } else {
                 log.info("{}, 分布式锁释放成功, key: {}, value: {}", format, lockKey, value);
@@ -157,13 +158,13 @@ public class RedisLockAspect {
 
         private static final Logger log = LoggerFactory.getLogger(LockExpandDaemonRunnable.class);
 
-        private final StringRedisTemplate template;
+        private final RedisClient redisClient;
         private final String key;
         private final String value;
         private final int lockTime;
 
-        public LockExpandDaemonRunnable(StringRedisTemplate template, String key, String value, int lockTime) {
-            this.template = template;
+        public LockExpandDaemonRunnable(RedisClient redisClient, String key, String value, int lockTime) {
+            this.redisClient = redisClient;
             this.key = key;
             this.value = value;
             this.lockTime = lockTime;
@@ -184,7 +185,7 @@ public class RedisLockAspect {
             while (signal) {
                 try {
                     Thread.sleep(waitTime);
-                    if (RedisLockUtil.expandLockTime(template, key, value, lockTime)) {
+                    if (RedisLockUtil.expandLockTime(redisClient, key, value, lockTime)) {
                         // 延长过期时间成功
                         log.debug("延长过期时间成功，本次等待{}ms，将重置key为{}的锁超时时间重置为{}s", waitTime, key, lockTime);
                     } else {
