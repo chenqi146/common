@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import javax.validation.ValidationException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     private static final Logger logger = LoggerFactory.getLogger(GlobalExceptionHandler.class);
@@ -28,18 +30,21 @@ public class GlobalExceptionHandler {
     @ExceptionHandler({BusinessException.class})
     @ResponseBody
     public ReturnForm<String> businessExceptionHandler(BusinessException e) {
-        logger.error("业务异常！原因是：{}", e.getMessage());
+        logger.error("业务异常！原因是：", e);
         return ReturnForm.error(e.getErrorCode(), e.getErrorMsg());
     }
 
     @ResponseBody
-    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class})
+    @ExceptionHandler({BindException.class, MethodArgumentNotValidException.class, ValidationException.class})
     public ReturnForm<String> validationExceptionHandler(Exception exception) {
         BindingResult bindResult = null;
         if (exception instanceof BindException) {
             bindResult = ((BindException)exception).getBindingResult();
         } else if (exception instanceof MethodArgumentNotValidException) {
             bindResult = ((MethodArgumentNotValidException)exception).getBindingResult();
+        } else if (exception instanceof ValidationException) {
+            ValidationException validationException = (ValidationException) exception;
+            return ReturnForm.error(validationException.getMessage());
         }
 
         if (bindResult == null) {
@@ -60,7 +65,6 @@ public class GlobalExceptionHandler {
         }
     }
 
-
     @ExceptionHandler({NullPointerException.class})
     @ResponseBody
     public ReturnForm<String> exceptionHandler(NullPointerException e) {
@@ -68,10 +72,22 @@ public class GlobalExceptionHandler {
         return ReturnForm.error(CommonEnum.BODY_NOT_MATCH);
     }
 
+    /**
+     *  暂未使用
+     * @param e
+     * @return
+     */
     @ExceptionHandler({ApiAuthorityException.class})
     @ResponseBody
     public ReturnForm<String> exceptionHandler(ApiAuthorityException e) {
-        logger.warn("权限认证异常！原因是: {}", e.getMessage());
+        logger.warn("权限认证异常！原因是: ", e);
         return ReturnForm.error(CommonEnum.FORBIDDEN);
+    }
+
+    @ExceptionHandler({Exception.class})
+    @ResponseBody
+    public ReturnForm<String> exceptionHandler(Exception e) {
+        logger.error("服务器异常！原因是：", e);
+        return ReturnForm.error(CommonEnum.INTERNAL_SERVER_ERROR);
     }
 }

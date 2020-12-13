@@ -55,7 +55,7 @@ public class BusinessException extends BaseException {
 
     public BusinessException(String errorMsg) {
         super(errorMsg);
-        this.errorCode = HttpStatus.BAD_REQUEST.value();
+        this.errorCode = CommonEnum.BUSINESS.getResultCode();
         this.errorMsg = errorMsg;
     }
 
